@@ -1,6 +1,12 @@
+// CMP SCI 2261 - Project 6 - Webcrawler
+// Terry Ford Jr.
+
 package edu.umsl;
-import java.util.Scanner;
+
 import java.util.ArrayList;
+import java.util.Scanner;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 public class WebCrawler {
     public static void main(String[] args) throws InterruptedException {
@@ -17,8 +23,9 @@ public class WebCrawler {
         listOfPendingURLs.add(startingURL);
 
         while (!listOfPendingURLs.isEmpty() &&
-                listOfTraversedURLs.size() <= 100) {
+                listOfTraversedURLs.size() <= 1000) {
             String urlString = listOfPendingURLs.remove(0);
+
             if (!listOfTraversedURLs.contains(urlString)) {
                 listOfTraversedURLs.add(urlString);
                 System.out.println("Crawl " + urlString);
@@ -46,7 +53,20 @@ public class WebCrawler {
             int current = 0;
             while (input.hasNext()) {
                 String line = input.nextLine();
-                current = line.indexOf("http:", current);
+                // extra
+                if (line.startsWith("<title>")) {       // TITLE PARSING
+                    //String newline = line.replace("<title>", "");
+                    //System.out.println("\tArticle Title: " + newline.replace("</title>", ""));
+
+                    // USING JSOUP
+                    Document doc = Jsoup.parse(line);
+                    System.out.println("\tArticle Title: " + doc.title());
+                }
+
+                //System.out.println(line);
+                // COUNT WORDS HERE, jsoup.parse will parse html if you do it right.
+
+                current = line.indexOf("https://en.wikipedia.org/", current);
                 while (current > 0) {
                     int endIndex = line.indexOf("\"", current);
                     if (endIndex > 0) { // Ensure that a correct URL is found
