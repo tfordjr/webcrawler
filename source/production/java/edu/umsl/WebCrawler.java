@@ -1,7 +1,12 @@
 // CMP SCI 2261 - Project 6 - Webcrawler
 // Terry Ford Jr.
-// I'm happy with how this turned out, I've had a lot of difficulty with getting the program
-// to crawl to different
+// I'm happy with how this turned out! I had a lot of issues with finding other wikipedia links to navigate to,
+// It turns out wikipedia doesn't have full, explicit links to navigate from one article to another, in site links
+// contain just the /wiki/Article_Name section of the url, so it was a bit more of a struggle to navigate from
+// one in-site article to another than I originally thought it would be.
+//
+// The wordFreq hashmap is constantly printing and making the system output unreadable, that line is located at the
+// bottom of the program, so you can comment it out and better see which wikipedia articles are being navigated to.
 
 package edu.umsl;
 
@@ -28,14 +33,16 @@ public class WebCrawler {
         ArrayList<String> listOfTraversedURLs = new ArrayList<>();
         listOfPendingURLs.add(startingURL);
         Map<String, Integer> freqMap = new HashMap<>();          // Word Frequency Hashmap
+        int count = 0;
 
         while (!listOfPendingURLs.isEmpty() &&
                 listOfTraversedURLs.size() <= 1000) {
             String urlString = listOfPendingURLs.remove(0);
+            count++;
 
             if (!listOfTraversedURLs.contains(urlString)) {
                 listOfTraversedURLs.add(urlString);
-                System.out.println("Crawl " + urlString);
+                System.out.println("Crawl " + count + " " + urlString);
 
                 try {
                     Thread.sleep(50);
@@ -66,11 +73,6 @@ public class WebCrawler {
                     Document doc = Jsoup.parse(line);
                     System.out.println("\tArticle Title: " + doc.title());
                 }
-                //System.out.println(line);
-
-//                if (line.contains("<a href=\"/wiki/")) {
-//                    System.out.println(line);
-//                }
 
                 // Cleaning input to feed into freqMap word frequency hashmap
                 org.jsoup.nodes.Document dom = Jsoup.parse(line);              // Parsing HTML Elements
@@ -91,11 +93,12 @@ public class WebCrawler {
                 });
 
                 // Reads article line by line, searching for links
-                current = line.indexOf("https://en.wikipedia.org/", current);
+                //current = line.indexOf("https://en.wikipedia.org/", current);
+                current = line.indexOf("/wiki/", current);
                 while (current > 0) {
                     int endIndex = line.indexOf("\"", current);
                     if (endIndex > 0) { // Ensure that a correct URL is found
-                        list.add(line.substring(current, endIndex));
+                        list.add("https://en.wikipedia.org" + line.substring(current, endIndex));
                         //System.out.println(line.substring(current, endIndex));
                         current = line.indexOf("http:", endIndex);
                     } else
@@ -108,7 +111,9 @@ public class WebCrawler {
                 throw new InterruptedException();
         }
 
-        System.out.println("\tWord Frequency: " + freqMap.toString());        // Print Word Frequency HashMap
+        System.out.println("\tWord Frequency: " + freqMap.toString());   // Print Word Frequency HashMap
+                 // THIS ONE LINE MAKES THE PROGRAM EXTREMELY MESSY WHEN RUN. TO GET A CLEARER PICTURE OF
+                 // WHAT IS HAPPENING, COMMENT OUT THIS LINE.
         return list;
     }
 }
