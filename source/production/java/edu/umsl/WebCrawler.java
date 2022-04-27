@@ -1,12 +1,18 @@
 // CMP SCI 2261 - Project 6 - Webcrawler
 // Terry Ford Jr.
+// I'm happy with how this turned out, I've had a lot of difficulty with getting the program
+// to crawl to different
 
 package edu.umsl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+
+import static java.util.Arrays.asList;
 
 public class WebCrawler {
     public static void main(String[] args) throws InterruptedException {
@@ -21,6 +27,7 @@ public class WebCrawler {
         ArrayList<String> listOfPendingURLs = new ArrayList<>();
         ArrayList<String> listOfTraversedURLs = new ArrayList<>();
         listOfPendingURLs.add(startingURL);
+        Map<String, Integer> freqMap = new HashMap<>();          // Word Frequency Hashmap
 
         while (!listOfPendingURLs.isEmpty() &&
                 listOfTraversedURLs.size() <= 1000) {
@@ -36,7 +43,7 @@ public class WebCrawler {
                     System.out.println("Error: " + ex.getMessage());
                 }
 
-                for (String s : getSubURLs(urlString)) {
+                for (String s : getSubURLs(urlString, freqMap)) {
                     if (!listOfTraversedURLs.contains(s))
                         listOfPendingURLs.add(s);
                 }
@@ -44,7 +51,8 @@ public class WebCrawler {
         }
     }
 
-    public static ArrayList<String> getSubURLs(String urlString) throws InterruptedException {
+    public static ArrayList<String> getSubURLs(String urlString, Map<String, Integer> freqMap)
+            throws InterruptedException {
         ArrayList<String> list = new ArrayList<>();
 
         try {
@@ -53,24 +61,42 @@ public class WebCrawler {
             int current = 0;
             while (input.hasNext()) {
                 String line = input.nextLine();
-                // extra
-                if (line.startsWith("<title>")) {       // TITLE PARSING
-                    //String newline = line.replace("<title>", "");
-                    //System.out.println("\tArticle Title: " + newline.replace("</title>", ""));
 
-                    // USING JSOUP
+                if (line.startsWith("<title>")) {              // TITLE PARSING USING JSOUP
                     Document doc = Jsoup.parse(line);
                     System.out.println("\tArticle Title: " + doc.title());
                 }
-
                 //System.out.println(line);
-                // COUNT WORDS HERE, jsoup.parse will parse html if you do it right.
 
+//                if (line.contains("<a href=\"/wiki/")) {
+//                    System.out.println(line);
+//                }
+
+                // Cleaning input to feed into freqMap word frequency hashmap
+                org.jsoup.nodes.Document dom = Jsoup.parse(line);              // Parsing HTML Elements
+                String text = dom.text();
+                text = text.replaceAll("[^\\w\\s]","");        // Removing symbols
+                text = text.replaceAll("[0-9]","");
+                //text = text.replaceAll("[-+^]*", "");
+                text = text.toLowerCase();                                     // Setting to lowercase
+
+                asList(text.split(" ")).forEach(s -> {          // COUNTING WORDS, PLACING INTO HASHMAP
+                    if (freqMap.containsKey(s)) {
+                        Integer count = (Integer) freqMap.get(s);
+                        freqMap.put(s, count + 1);
+                    } else {
+                        if (s.length() < 20)
+                            freqMap.put(s, 1);
+                    }
+                });
+
+                // Reads article line by line, searching for links
                 current = line.indexOf("https://en.wikipedia.org/", current);
                 while (current > 0) {
                     int endIndex = line.indexOf("\"", current);
                     if (endIndex > 0) { // Ensure that a correct URL is found
                         list.add(line.substring(current, endIndex));
+                        //System.out.println(line.substring(current, endIndex));
                         current = line.indexOf("http:", endIndex);
                     } else
                         current = -1;
@@ -82,6 +108,7 @@ public class WebCrawler {
                 throw new InterruptedException();
         }
 
+        System.out.println("\tWord Frequency: " + freqMap.toString());        // Print Word Frequency HashMap
         return list;
     }
 }
