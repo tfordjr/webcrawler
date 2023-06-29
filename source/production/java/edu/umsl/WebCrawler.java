@@ -84,7 +84,7 @@ public class WebCrawler {
 
                 asList(text.split(" ")).forEach(s -> {          // COUNTING WORDS, PLACING INTO HASHMAP
                     if (freqMap.containsKey(s)) {
-                        Integer count = (Integer) freqMap.get(s);
+                        Integer count = freqMap.get(s);
                         freqMap.put(s, count + 1);
                     } else {
                         if (s.length() < 20)
